@@ -1,61 +1,66 @@
 <template lang="pug">
-.columns
-  .column.is-one-third
-    .columns
-      .column.is-half
-        span.button.is-success.is-fullwidth(v-on:click="save()") SAVE
-      .column.is-one-quarter
-        span.button(v-on:click="cancel()") CANCEL
-      .column.is-one-quarter
-        span.button.is-danger(v-on:click="remove()") DELETE
-    label.label data
-    p.control
-      pikaday(:options="dateSelectOptions", v-model="current.date")
-    p.control
-      label.label lantaldea
-      multiselect(
-        v-model="current.lantaldeak",
-        :options="lantaldeak",
-        :close-on-select="true",
-        :clear-on-select="false",
-        placeholder="Select one",
-        :multiple="true",
-        label="title",
-        track-by="id"
-      )
-    p.control
-      label.label partaideak
-      multiselect(
-        v-model="current.partaideak",
-        :options="eragileak",
-        :close-on-select="true",
-        :clear-on-select="false",
-        placeholder="Select one",
-        :multiple="true",
-        label="fullName",
-        track-by="id"
-      )
-    p.control
-      label.label azalpena
-      textarea.textarea(v-model="current.content")
-  .column.is-two-thirds
-    proposamena-item-form(
-      v-for="(proposamena, key) in current.proposamenak",
-      :proposamena="proposamena",
-      :proposamenak="proposamenak",
-      :baliabideak="baliabideak",
-      :eragileak="eragileak",
-      v-on:input="updateProposamena(key, arguments[0])"
-      v-on:delete="deleteProposamena(key)",
-      style="margin-bottom:10px"
-      )
-    span.is-fullwidth.button.is-success(v-on:click="proposamenBerria()") Proposamen berria
+#asanblada
+  .columns
+    .column.is-one-third
+      .columns
+        .column.is-half
+          span.button.is-success.is-fullwidth(v-on:click="save()", v-bind:class="{ 'is-loading': isSaving }") GORDE
+        .column.is-one-quarter
+          span.button(v-on:click="cancel()") EZEZTATU
+        .column.is-one-quarter
+          span.button.is-danger(v-on:click="remove()") EZABATU
+      label.label data
+      p.control
+        pikaday(:options="dateSelectOptions", v-model="current.date")
+      p.control
+        label.label lantaldea
+        multiselect(
+          v-model="current.lantaldeak",
+          :options="lantaldeak",
+          :close-on-select="true",
+          :clear-on-select="false",
+          placeholder="Select one",
+          :multiple="true",
+          label="title",
+          track-by="id"
+        )
+      p.control
+        label.label partaideak
+        multiselect(
+          v-model="current.partaideak",
+          :options="eragileak",
+          :close-on-select="true",
+          :clear-on-select="false",
+          placeholder="Select one",
+          :multiple="true",
+          label="fullName",
+          track-by="id"
+        )
+      p.control
+        label.label azalpena
+        textarea.textarea(v-model="current.content")
+    .column.is-two-thirds
+      proposamena-item-form(
+        v-for="(proposamena, key) in current.proposamenak",
+        :proposamena="proposamena",
+        :proposamenak="proposamenak",
+        :baliabideak="baliabideak",
+        :eragileak="eragileak",
+        :lantaldeak="lantaldeak",
+        v-on:input="updateProposamena(key, arguments[0])"
+        v-on:delete="deleteProposamena(key)",
+        v-on:send="showModal(proposamena)",
+        style="margin-bottom:10px"
+        )
+      span.is-fullwidth.button.is-primary(v-on:click="proposamenBerria()") PROPOSAMEN BERRIA
+      eposta-modal(:show="showEpostaModal", v-on:hide="closeModal()", :proposamena="proposamena", :selected="selected")
 </template>
 
 <script>
 import axios from 'axios'
-// import _ from 'lodash'
+import EpostaModal from './widgets/EpostaModal'
 import moment from 'moment'
+import _ from 'lodash'
 import Multiselect from 'vue-multiselect'
 import Pikaday from './widgets/Pikaday'
 import ProposamenaItemForm from './proposamena/item-form'
@@ -65,11 +70,15 @@ export default {
   components: {
     ProposamenaItemForm,
     Multiselect,
-    Pikaday
+    Pikaday,
+    EpostaModal
   },
   data () {
     return {
       eragileak: [],
+      proposamena: null,
+      selected: [],
+      showEpostaModal: false,
       proposamenak: [],
       lantaldeak: [],
       baliabideak: [],
@@ -80,6 +89,7 @@ export default {
         partaideak: [],
         content: null
       },
+      isSaving: false,
       dateSelectOptions: {
         firstDay: 1,
         displayFormat: 'YYYY-MM-DD'
@@ -94,6 +104,17 @@ export default {
     this.getBaliabideak()
   },
   methods: {
+    showModal: function (proposamena) {
+      this.proposamena = proposamena
+      var selected = _.flatten([proposamena.antolatzaileak, proposamena.lagunak])
+      this.selected = selected
+      this.showEpostaModal = true
+    },
+    closeModal: function () {
+      this.proposamena = null
+      this.showEpostaModal = false
+      this.getAsanblada()
+    },
     getAsanblada: function () {
       var vm = this
       if (this.$route.params.id !== 'berria') {
@@ -113,7 +134,7 @@ export default {
 
         axios.delete(process.env.API_URL + '/proposamena/' + proposamena.id)
         .then(function () {
-          vm.$router.push({ name: 'asanbladak' })
+          vm.getAsanblada()
         })
       }
     },
@@ -158,15 +179,19 @@ export default {
     },
     save: function () {
       var vm = this
+      vm.isSaving = true
       if (vm.current.id) {
         axios.put(process.env.API_URL + '/asanblada/' + vm.current.id, vm.current)
         .then(function (res) {
-
+          vm.getAsanblada()
+          vm.isSaving = false
         })
       } else {
         axios.post(process.env.API_URL + '/asanblada', vm.current)
         .then(function (res) {
           vm.$router.push({ name: 'asanblada', params: { id: res.data.id } })
+          vm.getAsanblada()
+          vm.isSaving = false
         })
       }
     },

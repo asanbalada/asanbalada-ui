@@ -1,18 +1,22 @@
 <template lang="pug">
 form.form
   .columns
-    .column.is-half
+    .column.is-one-third
       label.label izena
       p.control
         input.input(v-model="current.title",type="text", placeholder="title")
-    .column.is-half
+    .column.is-one-third
+      label.label eposta
+      p.control
+        input.input(v-model="current.email",type="text", placeholder="eposta")
+    .column.is-one-third
       p.control
         label.label postazerrenda
         span.select.is-fullwidth
           select(v-model="current.postazerrenda")
             option(v-bind:value="null") -- zerrenda --
             option(v-for="postazerrenda in postazerrendak", v-bind:value="postazerrenda.id")
-              | {{ postazerrenda.title }} @ {{ postazerrenda.domain }}
+              | {{ postazerrenda.email }}
   label.label azalpena
   p.control
     textarea.textarea(v-model="current.description")
@@ -28,13 +32,14 @@ form.form
       track-by="id",
       :multiple="true"
     )
+  hr
   .columns
     .column.is-half
-      span.button.is-success.is-fullwidth(v-on:click="save()") SAVE
+      span.button.is-success.is-fullwidth(v-on:click="save()", v-bind:class="{ 'is-loading': isSaving }") GORDE
     .column.is-one-querter
-      span.button.is-fullwidth(v-on:click="cancel()") CANCEL
+      span.button.is-fullwidth(v-on:click="cancel()") EZEZTATU
     .column.is-one-querter
-      span.button.is-danger.is-fullwidth(v-on:click="remove()") DELETE
+      span.button.is-danger.is-fullwidth(v-on:click="remove()") EZABATU
 </template>
 
 <script>
@@ -49,7 +54,8 @@ export default {
       postazerrendak: [],
       current: {
         kideak: []
-      }
+      },
+      isSaving: false
     }
   },
   created: function () {
@@ -59,29 +65,35 @@ export default {
     getItems: function () {
       var vm = this
       if (this.$route.params.id !== 'berria') {
-        axios.get(process.env.API_URL + '/lantaldea/' + this.$route.params.id)
-        .then(function (res) {
-          if (res.data) vm.current = res.data
+        axios.get(process.env.API_URL + '/postazerrenda').then((res) => {
+          vm.postazerrendak = res.data
+          axios.get(process.env.API_URL + '/lantaldea/' + this.$route.params.id)
+          .then(function (res) {
+            if (res.data) {
+              vm.current = res.data
+              vm.current.postazerrenda = vm.current.postazerrenda ? vm.current.postazerrenda.id : null
+            }
+          })
         })
       }
       axios.get(process.env.API_URL + '/eragilea').then((res) => {
         vm.eragileak = res.data
       })
-      axios.get(process.env.API_URL + '/postazerrenda').then((res) => {
-        vm.postazerrendak = res.data
-      })
     },
     save: function () {
       var vm = this
+      vm.isSaving = true
       if (vm.current.id) {
         axios.put(process.env.API_URL + '/lantaldea/' + vm.current.id, vm.current)
         .then(function (res) {
-
+          vm.getItems()
+          vm.isSaving = false
         })
       } else {
         axios.post(process.env.API_URL + '/lantaldea', vm.current)
         .then(function (res) {
           vm.$router.push({ name: 'lantaldea', params: { id: res.data.id } })
+          vm.isSaving = false
         })
       }
     },

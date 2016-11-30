@@ -1,16 +1,11 @@
 <template lang="pug">
-.columns
-  .column
-    p.control
-      input.pikaday.input(type="text", v-model="dateString")
-  .column(v-if="options.timepicker")
-    .columns
-      .column
-        p.control
-          input.input(v-model="hours", v-on:input="update()")
-      .column
-        p.control
-          input.input(v-model="minutes", v-on:input="update()")
+.control.is-horizontal
+  .control.is-grouped
+    .control.has-addons
+      input.pikaday.input(type="text", v-model="dateString", style="width:100px;", placeholder="YYYY-MM-DD")
+      input.input(v-if="options.timepicker", type="text", v-model="hours", v-on:input="update()", style="width:35px", placeholder="00")
+      input.input(v-if="options.timepicker", type="text", v-model="minutes", v-on:input="update()", style="width:35px", placeholder="00")
+      span.button(v-on:click="clear()") X
 </template>
 
 <script>
@@ -35,17 +30,26 @@ export default {
   },
   watch: {
     value: function (newVal) {
-      this.changed = true
-      this.picker.setDate(newVal)
-      this.cloned = newVal
-      this.hours = moment(newVal).hours()
-      this.minutes = moment(newVal).minutes()
+      if (newVal) {
+        this.changed = true
+        this.cloned = newVal
+        this.hours = moment(newVal).hours()
+        this.minutes = moment(newVal).minutes()
+        this.picker.setDate(newVal)
+      }
     }
   },
   methods: {
     update: function () {
       let vm = this
       vm.cloned = moment(vm.picker.getDate()).hours(vm.hours).minutes(vm.minutes).toDate()
+      vm.$emit('input', vm.cloned)
+    },
+    clear: function () {
+      let vm = this
+      vm.cloned = null
+      this.hours = null
+      this.minutes = null
       vm.$emit('input', vm.cloned)
     }
   },

@@ -1,6 +1,5 @@
-# guardetech-client
-
-> A Vue.js project
+# asanbalada-ui
+ASANBALADAren (https://gitlab.com/asanbalada/asanbalada) web interfazea
 
 ## Build Setup
 

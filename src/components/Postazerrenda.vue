@@ -4,13 +4,13 @@ form.form
     .column.is-half
       label.label izena
       p.control
-        input.input(v-model="current.title",type="text", placeholder="title", v-if="!isNew()", disabled)
-        input.input(v-model="current.title",type="text", placeholder="title", v-if="isNew()")
+        input.input(v-model="current.title", type="text", placeholder="title", v-if="!isNew()", disabled)
+        input.input(v-model="current.title", type="text", placeholder="title", v-if="isNew()")
     .column.is-half
       label.label domeinua
       p.control
-        input.input(v-model="current.domain",placeholder="domain", v-if="!isNew()", disabled)
-        input.input(v-model="current.title",type="text", placeholder="title", v-if="isNew()")
+        input.input(v-model="current.domain", placeholder="domain", v-if="!isNew()", disabled)
+        input.input(v-model="current.domain", type="text", placeholder="title", v-if="isNew()")
   label.label azalpena
   p.control
     textarea.textarea(v-model="current.description")
@@ -26,15 +26,14 @@ form.form
       track-by="id",
       :multiple="true"
     )
-
-
+  hr
   .columns
     .column.is-half
-      span.button.is-success.is-fullwidth(v-on:click="save()") SAVE
+      span.button.is-success.is-fullwidth(v-on:click="save()", v-bind:class="{ 'is-loading': isSaving }") GORDE
     .column.is-one-querter
-      span.button.is-fullwidth(v-on:click="cancel()") CANCEL
-    .column.is-one-querter
-      span.button.is-danger.is-fullwidth(v-on:click="remove()") DELETE
+      span.button.is-fullwidth(v-on:click="cancel()") EZEZTATU
+    //- .column.is-one-querter
+      //- span.button.is-danger.is-fullwidth(v-on:click="remove()") EZABATU
 </template>
 
 <script>
@@ -48,7 +47,8 @@ export default {
       eragileak: [],
       current: {
         kideak: []
-      }
+      },
+      isSaving: false
     }
   },
   created: function () {
@@ -72,15 +72,18 @@ export default {
     },
     save: function () {
       var vm = this
+      vm.isSaving = true
       if (vm.current.id) {
         axios.put(process.env.API_URL + '/postazerrenda/' + vm.current.id, vm.current)
         .then(function (res) {
-
+          vm.getItems()
+          vm.isSaving = false
         })
       } else {
         axios.post(process.env.API_URL + '/postazerrenda', vm.current)
         .then(function (res) {
           vm.$router.push({ name: 'postazerrenda', params: { id: res.data.id } })
+          vm.isSaving = false
         })
       }
     },

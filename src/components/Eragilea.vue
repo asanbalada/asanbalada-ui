@@ -22,12 +22,9 @@ form.form
     .column.is-half
       label.label type
       p.control
-        label.radio
-          input(type="radio", v-model="current.mota", value="norbanakoa")
-          |  Norbanakoa
-        label.radio
-          input(type="radio", v-model="current.mota", value="kolektiboa")
-          |  Kolektiboa
+        span.select
+          select(v-model="current.mota")
+            option(v-for="mota in motak") {{ mota }}
     .column.is-half
       .eragilea-kolektiboak(v-if="current.mota==='norbanakoa'")
         label.label Kolektiboak
@@ -42,6 +39,10 @@ form.form
             track-by="id",
             :multiple="true"
           )
+  p.control
+    label.label bio
+    textarea.textarea(v-model="current.bio")
+
   p.control
     label.label postazerrendak
     multiselect(
@@ -90,13 +91,14 @@ form.form
       label.label facebook
       p.control
         input.input(v-model="current.facebook",placeholder="facebook")
+  hr
   .columns
     .column.is-half
-      span.button.is-success.is-fullwidth(v-on:click="save()") SAVE
+      span.button.is-success.is-fullwidth(v-on:click="save()", v-bind:class="{ 'is-loading': isSaving }") GORDE
     .column.is-one-querter
-      span.button.is-fullwidth(v-on:click="cancel()") CANCEL
+      span.button.is-fullwidth(v-on:click="cancel()") EZEZTATU
     .column.is-one-querter
-      span.button.is-danger.is-fullwidth(v-on:click="remove()") DELETE
+      span.button.is-danger.is-fullwidth(v-on:click="remove()") EZABATU
 </template>
 
 <script>
@@ -115,6 +117,8 @@ export default {
         mota: '',
         baliabideak: []
       },
+      isSaving: false,
+      motak: process.env.ERAGILE_MOTAK,
       postazerrendak: [],
       lantaldeak: [],
       baliabideak: [],
@@ -148,15 +152,18 @@ export default {
     },
     save: function () {
       var vm = this
+      vm.isSaving = true
       if (vm.current.id) {
         axios.put(process.env.API_URL + '/eragilea/' + vm.current.id, vm.current)
         .then(function (res) {
-
+          vm.current = res.data
+          vm.isSaving = false
         })
       } else {
         axios.post(process.env.API_URL + '/eragilea', vm.current)
         .then(function (res) {
           vm.$router.push({ name: 'eragilea', params: { id: res.data.id } })
+          vm.isSaving = false
         })
       }
     },

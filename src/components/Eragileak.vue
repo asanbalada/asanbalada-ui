@@ -1,21 +1,21 @@
 <template lang="pug">
 #eragileak
-  router-link.button.is-success(:to="{ name: 'eragilea', params: { id: 'berria' }}") berria
-  hr
   .columns
     .column.is-one-third
-      p.control.has-addons
-        input.input(placeholder="search", type="text", v-model="search")
-        span.button(v-on:click="search = ''") clear
+      .columns
+        .column
+          router-link.button.is-success.is-fullwidth(:to="{ name: 'eragilea', params: { id: 'berria' }}") berria
+        .column
+          p.control.has-addons
+            input.input(placeholder="bilatu", type="text", v-model="search")
+            span.button(v-on:click="search = ''") X
     .column.is-two-thirds
-      .tabs
+      .tabs.is-toggle
         ul
           li(v-bind:class="{ 'is-active': isActive(null) }")
-            a(v-on:click="filter = null") Denak
-          li(v-bind:class="{ 'is-active': isActive('kolektiboa') }")
-            a(v-on:click="filter = 'kolektiboa'") Kolektiboa
-          li(v-bind:class="{ 'is-active': isActive('norbanakoa') }")
-            a(v-on:click="filter = 'norbanakoa'") Norbanakoa
+            a(v-on:click="filter = null") denak
+          li(v-for="mota in motak", v-bind:class="{ 'is-active': isActive(mota) }")
+            a(v-on:click="filter = mota") {{ mota }}
   table.table
     thead
       tr
@@ -24,7 +24,7 @@
         th eposta
         th telefonoa
         th mota
-        th actions
+        th ekintzak
     tbody
       tr(v-for="item in itemsIn(filter)")
         td {{ item.izena }}
@@ -40,12 +40,11 @@
 <script>
 import axios from 'axios'
 import _ from 'lodash'
-import Multiselect from 'vue-multiselect'
 
 export default {
-  components: { Multiselect },
   data () {
     return {
+      motak: process.env.ERAGILE_MOTAK,
       items: [],
       originalItems: [],
       filter: null,
@@ -59,14 +58,11 @@ export default {
     search: function (newVal) {
       if (newVal) {
         var search = _.filter(this.originalItems, function (o) {
-          var fullName = _.toLower(o.fullName)
-          var eposta = _.toLower(o.eposta)
+          var searchString = _.toLower(o.fullName) + ' ' +
+          _.toLower(o.eposta) + ' ' +
+          _.toLower(o.bio)
           var s = _.toLower(newVal)
-          if (fullName.search(s) >= 0) {
-            return true
-          } else if (eposta.search(s) >= 0) {
-            return true
-          } else if (o.telefonoa && o.telefonoa.search(s) >= 0) {
+          if (searchString.search(s) >= 0) {
             return true
           } else {
             return false
@@ -82,14 +78,6 @@ export default {
     isActive: function (value) {
       return (this.filter === value)
     },
-    clearCurrent: function () {
-      this.current = {
-        kolektiboak: [],
-        postazerrendak: [],
-        baliabideak: [],
-        mota: ''
-      }
-    },
     mailTo: function (email) {
       return 'mailto:' + email
     },
@@ -102,49 +90,6 @@ export default {
       axios.get(process.env.API_URL + '/eragilea').then((res) => {
         vm.items = res.data
         vm.originalItems = res.data
-      })
-      axios.get(process.env.API_URL + '/postazerrenda').then((res) => {
-        vm.postazerrendak = res.data
-      })
-      axios.get(process.env.API_URL + '/lantaldea').then((res) => {
-        vm.lantaldeak = res.data
-      })
-      axios.get(process.env.API_URL + '/baliabidea').then((res) => {
-        vm.baliabideak = res.data
-      })
-    },
-    edit: function (id) {
-      this.current = _.clone(_.find(this.items, { id: id }))
-    },
-    save: function () {
-      var vm = this
-      if (vm.current.id) {
-        axios.put(process.env.API_URL + '/eragilea/' + vm.current.id, vm.current)
-        .then(function (res) {
-          vm.clearCurrent()
-          vm.getItems()
-        })
-      } else {
-        axios.post(process.env.API_URL + '/eragilea', vm.current)
-        .then(function (res) {
-          vm.clearCurrent()
-          vm.getItems()
-        })
-      }
-    },
-    create: function () {
-      this.current = {}
-    },
-    cancel: function () {
-      this.current = {}
-    },
-    remove: function () {
-      var vm = this
-      axios.delete(process.env.API_URL + '/eragilea/' + vm.current.id)
-      .then(function (res) {
-        _.remove(this.items, {id: vm.current.id})
-        vm.current = {}
-        vm.getItems()
       })
     }
   }

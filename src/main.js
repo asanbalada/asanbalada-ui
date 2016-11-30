@@ -13,6 +13,13 @@ import Lantaldeak from './components/Lantaldeak'
 import Lantaldea from './components/Lantaldea'
 import Baliabideak from './components/Baliabideak'
 import Baliabidea from './components/Baliabidea'
+import Proposamenak from './components/Proposamenak'
+import Proposamena from './components/Proposamena'
+import Epostak from './components/Epostak'
+import Eposta from './components/Eposta'
+import Metadatak from './components/Metadatak'
+import Metadata from './components/Metadata'
+import Egutegia from './components/Egutegia'
 
 Vue.use(VueRouter)
 
@@ -28,7 +35,14 @@ const routes = [
   { path: '/lantaldeak', name: 'lantaldeak', component: Lantaldeak },
   { path: '/lantaldeak/:id', name: 'lantaldea', component: Lantaldea },
   { path: '/baliabideak', name: 'baliabideak', component: Baliabideak },
-  { path: '/baliabideak/:id', name: 'baliabidea', component: Baliabidea }
+  { path: '/baliabideak/:id', name: 'baliabidea', component: Baliabidea },
+  { path: '/proposamenak', name: 'proposamenak', component: Proposamenak },
+  { path: '/proposamenak/:id', name: 'proposamena', component: Proposamena },
+  { path: '/epostak', name: 'epostak', component: Epostak },
+  { path: '/epostak/:id', name: 'eposta', component: Eposta },
+  { path: '/metadatak', name: 'metadatak', component: Metadatak },
+  { path: '/metadatak/:id', name: 'metadata', component: Metadata },
+  { path: '/egutegia', name: 'egutegia', component: Egutegia }
 ]
 
 /* eslint-disable no-new */

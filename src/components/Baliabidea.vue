@@ -27,13 +27,14 @@ form.form
       track-by="id",
       :multiple="true"
     )
+  hr
   .columns
     .column.is-half
-      span.button.is-success.is-fullwidth(v-on:click="save()") SAVE
+      span.button.is-success.is-fullwidth(v-on:click="save()", v-bind:class="{ 'is-loading': isSaving }") GORDE
     .column.is-one-querter
-      span.button.is-fullwidth(v-on:click="cancel()") CANCEL
+      span.button.is-fullwidth(v-on:click="cancel()") EZEZTATU
     .column.is-one-querter
-      span.button.is-danger.is-fullwidth(v-on:click="remove()") DELETE
+      span.button.is-danger.is-fullwidth(v-on:click="remove()") EZABATU
 </template>
 
 <script>
@@ -47,7 +48,8 @@ export default {
       eragileak: [],
       current: {
         arduradunak: []
-      }
+      },
+      isSaving: false
     }
   },
   created: function () {
@@ -68,15 +70,18 @@ export default {
     },
     save: function () {
       var vm = this
+      vm.isSaving = true
       if (vm.current.id) {
         axios.put(process.env.API_URL + '/baliabidea/' + vm.current.id, vm.current)
         .then(function (res) {
-
+          vm.getItems()
+          vm.isSaving = false
         })
       } else {
         axios.post(process.env.API_URL + '/baliabidea', vm.current)
         .then(function (res) {
           vm.$router.push({ name: 'baliabidea', params: { id: res.data.id } })
+          vm.isSaving = false
         })
       }
     },
