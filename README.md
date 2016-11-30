@@ -1,6 +1,9 @@
 # asanbalada-ui
 ASANBALADAren (https://gitlab.com/asanbalada/asanbalada) web interfazea
 
+## Biltegia
+https://gitlab.com/asanbalada/asanbalada-ui
+
 ## Build Setup
 
 ``` bash
